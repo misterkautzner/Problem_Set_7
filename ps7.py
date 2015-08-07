@@ -1,7 +1,7 @@
 # Problem Set 7: Simulating the Spread of Disease and Virus Population Dynamics
 # Name:  John Kautzner
 # Collaborators:  None
-# Time:  2:00
+# Time:  2:45
 
 import numpy
 import random
@@ -255,7 +255,10 @@ class ResistantVirus(SimpleVirus):
         the probability of the offspring acquiring or losing resistance to a drug.
         """
 
-        # TODO
+        self.maxBirthProb = maxBirthProb
+        self.clearProb = clearProb
+        self.resistances = resistances
+        self.mutProb = mutProb
 
 
     def isResistantTo(self, drug):
@@ -270,14 +273,18 @@ class ResistantVirus(SimpleVirus):
         otherwise.
         """
 
-        # TODO
+        self.resistances(drug)
 
 
     def isResistantToAll (self, drugList):
         """ Helper function that checks if virus is resistant to all the drugs
             in drugList """
 
-        # TODO
+        for drug in drugList:
+            if(self.resistances(drug) == False):
+                return False
+
+        return True
 
 
     def reproduce(self, popDensity, activeDrugs):
@@ -300,9 +307,9 @@ class ResistantVirus(SimpleVirus):
         maxBirthProb and clearProb values as its parent).
 
         For each drug resistance trait of the virus (i.e. each key of
-        self.resistances), the offspring has probability 1-mutProb of
+        self.resistances), the offspring has probability (1 - mutProb) of
         inheriting that resistance trait from the parent, and probability
-        mutProb of switching that resistance trait in the offspring.
+        mutProb of switching that resistance trait on in the offspring.
 
         For example, if a virus particle is resistant to guttagonol but not
         srinol, and self.mutProb is 0.1, then there is a 10% chance that
@@ -324,7 +331,26 @@ class ResistantVirus(SimpleVirus):
         NoChildException if this virus particle does not reproduce.
         """
 
-        # TODO
+        newResistances = {}
+
+        if(not self.isResistantToAll(activeDrugs)):
+            raise NoChildException
+
+        else:
+            if(random.random() > self.maxBirthProb * (1 - popDensity)):
+                raise NoChildException
+
+            else:
+
+                for drug in self.resistances:
+                    if(random.random() <= self.mutProb):
+                        newResistances[drug] = not self.resistances[drug]
+
+                    else:
+                        newResistances[drug] = self.resistances[drug]
+
+                child = ResistantVirus(self.maxBirthProb, self.clearProb, newResistances, self.mutProb)
+                return child
 
 
 
