@@ -1,7 +1,7 @@
 # Problem Set 7: Simulating the Spread of Disease and Virus Population Dynamics
 # Name:  John Kautzner
 # Collaborators:  None
-# Time:  2:45
+# Time:  3:15
 
 import numpy
 import random
@@ -372,7 +372,9 @@ class TreatedPatient(SimplePatient):
         maxPop: The  maximum virus population for this patient (an integer)
         """
 
-        # TODO
+        self.viruses = viruses
+        self.maxPop = maxPop
+        self.activeDrugs = []
 
 
     def addPrescription(self, newDrug):
@@ -386,7 +388,8 @@ class TreatedPatient(SimplePatient):
         postcondition: The list of drugs being administered to a patient is updated
         """
 
-        # TODO
+        if newDrug not in self.activeDrugs:
+            self.activeDrugs.append(newDrug)
 
 
     def getPrescriptions(self):
@@ -397,7 +400,7 @@ class TreatedPatient(SimplePatient):
         patient.
         """
 
-        # TODO
+        return self.activeDrugs
 
 
     def getResistPop(self, drugResist):
@@ -412,7 +415,13 @@ class TreatedPatient(SimplePatient):
         drugs in the drugResist list.
         """
 
-        # TODO
+        pop = 0
+
+        for v in self.viruses:
+            if v.isResistantToAll(drugResist):
+                pop += 1
+
+        return pop
 
 
     def update(self):
@@ -435,8 +444,25 @@ class TreatedPatient(SimplePatient):
         integer)
         """
 
-        # TODO
+        children = []
 
+        # Removes viruses that don't survive.
+        for v in self.viruses:
+            if not v.isResistanttoAll(self.activeDrugs):
+                self.viruses.remove(v)
+
+        popDensity = float(len(self.viruses))/float(self.maxPop)
+
+        # Appends children to the list of viruses.
+        for v in self.viruses:
+            try:
+                children += [v.reproduce(popDensity, self.activeDrugs)]
+            except NoChildException:
+                pass
+
+        self.viruses += children
+
+        return len(self.viruses)
 
 
 #
