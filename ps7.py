@@ -1,7 +1,7 @@
 # Problem Set 7: Simulating the Spread of Disease and Virus Population Dynamics
 # Name:  John Kautzner
 # Collaborators:  None
-# Time:  0:45
+# Time:  2:00
 
 import numpy
 import random
@@ -40,8 +40,6 @@ class SimpleVirus(object):
         clearProb: Maximum clearance probability (a float between 0-1).
         """
 
-        # TODO
-
         self.maxBirthProb = maxBirthProb
         self.clearProb = clearProb
 
@@ -52,8 +50,6 @@ class SimpleVirus(object):
         returns: True with probability self.clearProb and otherwise returns
         False.
         """
-
-        # TODO
 
         return random.random() <= self.clearProb
 
@@ -78,8 +74,6 @@ class SimpleVirus(object):
         maxBirthProb and clearProb values as this virus. Raises a
         NoChildException if this virus particle does not reproduce.
         """
-
-        # TODO
 
         if(random.random() <= self.maxBirthProb*(1 - popDensity)):
             return SimpleVirus(self.maxBirthProb, self.clearProb)
@@ -106,8 +100,6 @@ class SimplePatient(object):
         maxPop: the  maximum virus population for this patient (an integer)
         """
 
-        # TODO
-
         self.viruses = viruses
         self.maxPop = maxPop
 
@@ -118,8 +110,6 @@ class SimplePatient(object):
         Gets the current total virus population.
         returns: The total virus population (an integer)
         """
-
-        # TODO
 
         return len(self.viruses)
 
@@ -142,16 +132,17 @@ class SimplePatient(object):
         integer)
         """
 
-        # TODO
-
         for v in self.viruses:
-            if v.doesclear():
+            if v.doesClear():
                 self.viruses.remove(v)
 
         popDensity = float(self.getTotalPop())/float(self.maxPop)
 
         for v in self.viruses:
-            self.viruses.append(v.reproduce(popDensity))
+            try:
+                self.viruses.append(v.reproduce(popDensity))
+            except NoChildException:
+                pass
 
         return self.viruses
 
@@ -192,22 +183,51 @@ def simulationWithoutDrug(numViruses, maxPop, maxBirthProb, clearProb,
     numTrials: number of simulation runs to execute (an integer)
     """
 
-    # TODO
+    sumTrials = [0]*300
+
+    for i in range(numTrials):
+        thisTrial = runSimulation(numViruses, maxPop, maxBirthProb, clearProb)
+        # Sets thisTrial to a list of int.  Each int represents the number of viruses at the given step.
+
+        for j in range(300):
+            sumTrials[j] += thisTrial[j]
+
+    avgPop = [0]*300
+    for i in range(300):
+        avgPop[i] = sumTrials[i]/float(numTrials)
+
+    plot("Average Virus Population Per Time Step", avgPop, "Time Steps", "Number of Viruses")
+    return avgPop
 
 
 def runSimulation (numViruses, maxPop, maxBirthProb, clearProb):
-    """ helper function for doing one simulation run """
+    """ helper function for doing one simulation run
+        Returns list of virus population at the end of every step """
 
     viruses = [SimpleVirus(maxBirthProb, clearProb)]*numViruses
 
     patient = SimplePatient(viruses, maxPop)
 
-    virusesEachStep = []
+    virusesEachStep = [numViruses]
 
     for i in range(300):
-        virusesEachStep.append(patient.update())
+        virusesEachStep.append(len(patient.update()))
 
-runSimulation(100, 1000, .1, .5)
+    return virusesEachStep
+
+
+def plot(title, yVals, xAxis, yAxis):
+
+    pylab.title(title)
+    pylab.xlabel(xAxis)
+    pylab.ylabel(yAxis)
+
+    pylab.plot(yVals)
+    pylab.show()
+
+#runSimulation(100, 10000, .1, .05)
+#simulationWithoutDrug(100, 10000, .1, .05, 5)
+#plot("Title Here", [50]*300, "X-Axis", "Y-Axis")
 
 #
 # PROBLEM 4
