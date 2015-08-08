@@ -1,7 +1,7 @@
 # Problem Set 7: Simulating the Spread of Disease and Virus Population Dynamics
 # Name:  John Kautzner
 # Collaborators:  None
-# Time:  3:15
+# Time:  4:15
 
 import numpy
 import random
@@ -281,7 +281,7 @@ class ResistantVirus(SimpleVirus):
             in drugList """
 
         for drug in drugList:
-            if(self.resistances(drug) == False):
+            if(self.resistances[drug] == False):
                 return False
 
         return True
@@ -448,7 +448,7 @@ class TreatedPatient(SimplePatient):
 
         # Removes viruses that don't survive.
         for v in self.viruses:
-            if not v.isResistanttoAll(self.activeDrugs):
+            if not v.isResistantToAll(self.activeDrugs):
                 self.viruses.remove(v)
 
         popDensity = float(len(self.viruses))/float(self.maxPop)
@@ -490,12 +490,79 @@ def simulationWithDrug(numViruses, maxPop, maxBirthProb, clearProb, resistances,
     numTrials: number of simulation runs to execute (an integer)
 
     """
+    SumResistPop = [0]*300
+    SumTot = [0]*300
+    avgResist = [0]*300
+    avgTot = [0]*300
 
-    # TODO
+    for i in range(numTrials):
+        tup = runDrugSimulation(numViruses, maxPop, maxBirthProb, clearProb, resistances, mutProb, 150, 300)
+        TrialResist = tup[0]
+        TrialTot = tup[1]
+
+        for j in range(300):
+            SumResistPop[j] += TrialResist[j]
+            SumTot[j] += TrialTot[j]
+
+    for i in range(300):
+        avgResist[i] = float(SumResistPop[i])/float(numTrials)
+        avgTot[i] = float(SumTot[i])/float(numTrials)
+
+
+    pylab.title("Average Number of Viruses with Different Resistances to Guttagonol")
+    pylab.xlabel("Time Steps")
+    pylab.ylabel("Number of Viruses")
+
+    pylab.plot(avgResist, '-r', label = 'Resistant')
+    pylab.plot(avgTot, '-b', label = 'Total')
+    pylab.legend(loc = 'upper left')
+    pylab.show()
 
 
 def runDrugSimulation (numViruses, maxPop, maxBirthProb, clearProb, resistances,
                        mutProb, numStepsBeforeDrugApplied, totalNumSteps):
     """ Helper function for doing one actual simulation run with drug applied """
 
-    # TODO
+    viruses = [ResistantVirus(maxBirthProb, clearProb, resistances, mutProb)]*numViruses
+
+    ResistPop = [0]
+    Total = [numViruses]
+
+    newPatient = TreatedPatient(viruses, maxPop)
+
+    # while(False):
+    #     for i in range(150):
+    #         newPatient.update()
+    #         numResist = newPatient.getResistPop(resistances)
+    #         ResistPop += [numResist]
+    #         NonResist += [len(newPatient.viruses) - numResist]
+    #
+    #     if('guttagonol' in newPatient.getPrescriptions()):
+    #         break
+    #
+    #     newPatient.addPrescription('guttagonol')
+
+    for i in range(numStepsBeforeDrugApplied):
+            newPatient.update()
+            numResist = newPatient.getResistPop(resistances)
+            ResistPop += [numResist]
+            Total += [len(newPatient.viruses)]
+
+    newPatient.addPrescription('guttagonol')
+    newPatient.update()
+    numResist = newPatient.getResistPop(resistances)
+    ResistPop += [numResist]
+    Total += [len(newPatient.viruses)]
+
+
+
+    for i in range(totalNumSteps - numStepsBeforeDrugApplied - 1):
+        newPatient.update()
+        numResist = newPatient.getResistPop(resistances)
+        ResistPop += [numResist]
+        Total += [len(newPatient.viruses)]
+
+    return (ResistPop, Total)
+
+
+simulationWithDrug(100, 10000, .1, .05, {'guttagonol':False}, .1, 1)
